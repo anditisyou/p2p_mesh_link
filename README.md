@@ -73,4 +73,7 @@ The prototype is intended for learning, experimentation, and demonstrating how i
 Inspired by decentralized emergency communication systems and mesh networking architectures designed for disaster-resilient communication.
 
 ---
+## Author 
+
+Vaishnavi Khandelwal
 ```}
