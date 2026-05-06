@@ -76,4 +76,3 @@ Inspired by decentralized emergency communication systems and mesh networking ar
 ## Author 
 
 Vaishnavi Khandelwal
-```}
