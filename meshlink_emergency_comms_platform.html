@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeshLink</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --navy:#0a0e1a;
+    --navy2:#0d1426;
+    --navy3:#121b35;
+    --slate:#1e2d4e;
+    --slate2:#243358;
+    --blue:#2563eb;
+    --blue2:#3b82f6;
+    --blue3:#60a5fa;
+    --cyan:#06b6d4;
+    --cyan2:#22d3ee;
+    --red:#ef4444;
+    --amber:#f59e0b;
+    --green:#10b981;
+    --text1:#f0f4ff;
+    --text2:#94a3b8;
+    --text3:#64748b;
+    --border:#1e3a5f;
+    --border2:#2a4a7a;
+    --font-head:'Syne',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+  }
+  body{background:var(--navy);color:var(--text1);font-family:var(--font-head);min-height:100vh;overflow-x:hidden}
+  .app{display:flex;flex-direction:column;min-height:100vh}
+
+  /* NAV */
+  nav{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:rgba(10,14,26,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+  .logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;letter-spacing:-0.5px}
+  .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:8px;display:flex;align-items:center;justify-content:center}
+  .logo-icon svg{width:18px;height:18px}
+  .nav-links{display:flex;gap:4px}
+  .nav-btn{padding:7px 14px;border-radius:6px;border:none;background:transparent;color:var(--text2);font-family:var(--font-head);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s}
+  .nav-btn:hover,.nav-btn.active{background:var(--slate);color:var(--text1)}
+  .nav-btn.active{color:var(--blue3)}
+  .nav-status{display:flex;align-items:center;gap:8px;font-size:12px;font-family:var(--font-mono);color:var(--text2)}
+  .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.4)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}
+
+  /* VIEWS */
+  .view{display:none;flex:1}
+  .view.active{display:flex;flex-direction:column}
+
+  /* LANDING */
+  .hero{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px 40px;text-align:center;position:relative;overflow:hidden;min-height:420px}
+  .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(37,99,235,0.12),transparent);pointer-events:none}
+  .hero-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:rgba(37,99,235,0.08);font-size:11px;font-family:var(--font-mono);color:var(--blue3);margin-bottom:24px;letter-spacing:0.5px}
+  .hero h1{font-size:clamp(32px,6vw,58px);font-weight:800;letter-spacing:-2px;line-height:1.05;margin-bottom:16px}
+  .hero h1 span{background:linear-gradient(135deg,var(--blue3),var(--cyan2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hero p{font-size:15px;color:var(--text2);max-width:480px;line-height:1.7;margin-bottom:32px;font-family:var(--font-mono);font-weight:400}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .btn-primary{padding:12px 24px;background:var(--blue);border:none;border-radius:8px;color:#fff;font-family:var(--font-head);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+  .btn-primary:hover{background:var(--blue2);transform:translateY(-1px)}
+  .btn-outline{padding:12px 24px;background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--text1);font-family:var(--font-head);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+  .btn-outline:hover{background:var(--slate);border-color:var(--blue)}
+
+  /* MESH CANVAS */
+  .mesh-canvas-wrap{width:100%;height:220px;position:relative;overflow:hidden}
+  #meshCanvas{width:100%;height:100%}
+
+  /* FEATURE CARDS */
+  .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;padding:24px}
+  .feat-card{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .2s}
+  .feat-card:hover{border-color:var(--border2);background:var(--navy3)}
+  .feat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:18px}
+  .feat-card h3{font-size:14px;font-weight:700;margin-bottom:6px;color:var(--text1)}
+  .feat-card p{font-size:12px;color:var(--text2);line-height:1.6;font-family:var(--font-mono)}
+  .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-family:var(--font-mono);font-weight:600;margin-top:8px}
+  .tag.blue{background:rgba(37,99,235,.15);color:var(--blue3)}
+  .tag.cyan{background:rgba(6,182,212,.15);color:var(--cyan2)}
+  .tag.green{background:rgba(16,185,129,.15);color:#34d399}
+  .tag.red{background:rgba(239,68,68,.15);color:#f87171}
+
+  /* COMMS VIEW */
+  .comms-layout{display:grid;grid-template-columns:260px 1fr;gap:0;flex:1;overflow:hidden;max-height:calc(100vh - 110px)}
+  .peers-panel{background:var(--navy2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+  .panel-header{padding:14px 16px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--text2);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
+  .peer-list{flex:1;overflow-y:auto;padding:8px}
+  .peer-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;cursor:pointer;transition:all .2s;margin-bottom:4px}
+  .peer-item:hover,.peer-item.active{background:var(--slate)}
+  .peer-avatar{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:var(--font-mono);flex-shrink:0}
+  .peer-info{flex:1;min-width:0}
+  .peer-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .peer-meta{font-size:10px;color:var(--text3);font-family:var(--font-mono)}
+  .peer-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .dot-green{background:var(--green)}
+  .dot-amber{background:var(--amber)}
+  .dot-slate{background:var(--text3)}
+
+  /* CHAT */
+  .chat-area{display:flex;flex-direction:column;overflow:hidden}
+  .chat-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .chat-title{font-size:14px;font-weight:700}
+  .chat-subtitle{font-size:11px;color:var(--text3);font-family:var(--font-mono)}
+  .chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+  .msg{display:flex;flex-direction:column;max-width:75%}
+  .msg.outgoing{align-self:flex-end}
+  .msg.incoming{align-self:flex-start}
+  .msg-header{font-size:10px;color:var(--text3);font-family:var(--font-mono);margin-bottom:4px;display:flex;gap:8px;align-items:center}
+  .msg-bubble{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;font-family:var(--font-mono);position:relative}
+  .msg.outgoing .msg-bubble{background:var(--blue);border-bottom-right-radius:4px}
+  .msg.incoming .msg-bubble{background:var(--slate);border-bottom-left-radius:4px}
+  .msg-bubble.sos{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#fca5a5}
+  .msg-packet{background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:10px;font-family:var(--font-mono);color:var(--text2);margin-top:4px}
+  .msg-packet code{color:var(--cyan2)}
+
+  /* CHAT INPUT */
+  .chat-input-area{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end}
+  .input-wrap{flex:1;position:relative}
+  .chat-input{width:100%;background:var(--slate);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text1);font-family:var(--font-mono);font-size:13px;outline:none;resize:none;min-height:42px;max-height:100px;transition:border-color .2s}
+  .chat-input:focus{border-color:var(--blue)}
+  .send-btn,.sos-btn{padding:10px 16px;border-radius:8px;border:none;font-family:var(--font-head);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+  .send-btn{background:var(--blue);color:#fff}
+  .send-btn:hover{background:var(--blue2)}
+  .sos-btn{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:#f87171}
+  .sos-btn:hover{background:rgba(239,68,68,.25)}
+  .priority-sel{background:var(--slate);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-family:var(--font-mono);font-size:11px;padding:6px 10px;outline:none;cursor:pointer}
+
+  /* DHT VIEW */
+  .dht-layout{display:grid;grid-template-columns:1fr 300px;gap:0;flex:1;overflow:hidden;max-height:calc(100vh - 110px)}
+  .dht-main{overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+  .dht-side{background:var(--navy2);border-left:1px solid var(--border);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+  .section-title{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:12px}
+  .code-block{background:var(--navy3);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:var(--font-mono);font-size:11px;color:var(--cyan2);line-height:1.8;overflow-x:auto}
+  .code-block .kw{color:var(--blue3)}
+  .code-block .str{color:#86efac}
+  .code-block .num{color:var(--amber)}
+  .code-block .cm{color:var(--text3)}
+  .routing-table{width:100%;border-collapse:collapse;font-size:11px;font-family:var(--font-mono)}
+  .routing-table th{padding:8px 10px;text-align:left;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:0.5px}
+  .routing-table td{padding:8px 10px;border-bottom:1px solid rgba(30,42,78,.5);color:var(--text2)}
+  .routing-table td:first-child{color:var(--cyan2)}
+  .routing-table tr:hover td{background:var(--slate)}
+
+  /* VIZ VIEW */
+  .viz-layout{display:flex;flex-direction:column;flex:1;overflow:hidden}
+  .viz-toolbar{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .viz-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all .2s}
+  .viz-btn:hover,.viz-btn.active{background:var(--slate);color:var(--text1);border-color:var(--blue)}
+  .viz-content{display:grid;grid-template-columns:1fr 280px;flex:1;overflow:hidden}
+  .viz-canvas-wrap{position:relative;overflow:hidden}
+  #vizCanvas{width:100%;height:100%}
+  .viz-stats{background:var(--navy2);border-left:1px solid var(--border);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+  .stat-card{background:var(--navy3);border:1px solid var(--border);border-radius:10px;padding:14px}
+  .stat-card label{font-size:10px;color:var(--text3);font-family:var(--font-mono);letter-spacing:0.5px;text-transform:uppercase;display:block;margin-bottom:4px}
+  .stat-val{font-size:22px;font-weight:700;font-family:var(--font-mono);color:var(--text1)}
+  .stat-sub{font-size:10px;color:var(--text3);font-family:var(--font-mono);margin-top:2px}
+  .stat-bar{height:3px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden}
+  .stat-bar-fill{height:100%;border-radius:2px;transition:width 1s}
+
+  /* PACKET LOG */
+  .pkt-log{background:var(--navy3);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .pkt-log-header{padding:10px 14px;border-bottom:1px solid var(--border);font-size:10px;font-family:var(--font-mono);color:var(--text3);display:flex;justify-content:space-between;text-transform:uppercase;letter-spacing:0.5px}
+  .pkt-entry{padding:8px 14px;border-bottom:1px solid rgba(30,42,78,.4);font-size:10px;font-family:var(--font-mono);display:flex;gap:8px;align-items:center}
+  .pkt-entry:last-child{border-bottom:none}
+  .pkt-time{color:var(--text3);min-width:50px}
+  .pkt-id{color:var(--cyan2);min-width:80px}
+  .pkt-route{flex:1;color:var(--text2)}
+  .pkt-pri{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600}
+  .pri-high{background:rgba(239,68,68,.2);color:#f87171}
+  .pri-med{background:rgba(245,158,11,.2);color:#fbbf24}
+  .pri-low{background:rgba(100,116,139,.2);color:var(--text2)}
+  .pri-sos{background:rgba(239,68,68,.4);color:#fca5a5;animation:priFlash 1s infinite}
+  @keyframes priFlash{0%,100%{opacity:1}50%{opacity:.5}}
+
+  /* PACKET ANIM */
+  .pkt-anim{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;transition:none}
+
+  /* IDENTITY PANEL */
+  .identity-card{background:var(--navy2);border:1px solid var(--border2);border-radius:12px;padding:16px;margin:16px}
+  .id-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .id-avatar{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;font-family:var(--font-mono);background:linear-gradient(135deg,var(--blue),var(--cyan))}
+  .id-name{font-size:16px;font-weight:700}
+  .id-label{font-size:11px;color:var(--text3);font-family:var(--font-mono)}
+  .id-field{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}
+  .id-field label{font-size:9px;color:var(--text3);font-family:var(--font-mono);letter-spacing:1px;text-transform:uppercase}
+  .id-field span{font-size:11px;color:var(--cyan2);font-family:var(--font-mono);word-break:break-all}
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+  /* ANIMATIONS */
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .fade-in{animation:fadeIn .3s ease forwards}
+  @keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+
+  /* NODE DETAIL */
+  .node-detail{background:var(--navy3);border:1px solid var(--border);border-radius:10px;padding:12px}
+  .node-detail h4{font-size:12px;font-weight:700;margin-bottom:8px}
+  .nd-row{display:flex;justify-content:space-between;padding:4px 0;font-size:11px;font-family:var(--font-mono);border-bottom:1px solid rgba(30,42,78,.4)}
+  .nd-row:last-child{border:none}
+  .nd-row span:first-child{color:var(--text3)}
+  .nd-row span:last-child{color:var(--text1)}
+
+  /* SCROLLABLE PANE */
+  .scroll-pane{overflow-y:auto;flex:1}
+
+  /* ACTIVITY */
+  .activity-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(30,42,78,.3);font-size:11px;font-family:var(--font-mono)}
+  .activity-item:last-child{border:none}
+  .act-time{color:var(--text3);min-width:45px}
+  .act-msg{color:var(--text2);flex:1}
+  .act-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:3px}
+
+  /* DIVIDER */
+  .divider{height:1px;background:var(--border);margin:8px 0}
+
+  /* SOS ALERT */
+  .sos-alert{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin:0 16px 8px}
+  .sos-icon{font-size:20px;flex-shrink:0}
+  .sos-text{flex:1}
+  .sos-text strong{display:block;font-size:13px;color:#f87171;margin-bottom:2px}
+  .sos-text span{font-size:11px;color:var(--text3);font-family:var(--font-mono)}
+
+  /* MISC */
+  .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text3);font-family:var(--font-mono);font-size:13px}
+  .ttl-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-family:var(--font-mono);color:var(--text3)}
+
+  /* ENCRYPTION INDICATOR */
+  .enc-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);font-size:10px;font-family:var(--font-mono);color:#34d399}
+</style>
+</head>
+<body>
+<div class="app">
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="3"/>
+        <circle cx="4" cy="6" r="2"/>
+        <circle cx="20" cy="6" r="2"/>
+        <circle cx="4" cy="18" r="2"/>
+        <circle cx="20" cy="18" r="2"/>
+        <line x1="6" y1="7" x2="10" y2="11"/>
+        <line x1="18" y1="7" x2="14" y2="11"/>
+        <line x1="6" y1="17" x2="10" y2="13"/>
+        <line x1="18" y1="17" x2="14" y2="13"/>
+      </svg>
+    </div>
+    MeshLink
+  </div>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="showView('landing')">Overview</button>
+    <button class="nav-btn" onclick="showView('comms')">Comms</button>
+    <button class="nav-btn" onclick="showView('dht')">DHT</button>
+    <button class="nav-btn" onclick="showView('viz')">Network</button>
+  </div>
+  <div class="nav-status">
+    <div class="pulse"></div>
+    <span id="navPeers">0 peers</span>
+    <span style="color:var(--text3)">·</span>
+    <span id="navLatency">—ms</span>
+  </div>
+</nav>
+
+<!-- LANDING -->
+<div id="view-landing" class="view active">
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-badge">
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--cyan2)"></div>
+      INFRASTRUCTURE-FREE · PEER-TO-PEER · ENCRYPTED
+    </div>
+    <h1>Emergency comms<br><span>without the network</span></h1>
+    <p>MeshLink enables resilient communication when centralized infrastructure fails — using WebRTC data channels, distributed hash tables, and self-healing mesh routing.</p>
+    <div class="hero-cta">
+      <button class="btn-primary" onclick="showView('comms')">Open Comms Terminal</button>
+      <button class="btn-outline" onclick="showView('viz')">View Network Topology</button>
+    </div>
+  </div>
+
+  <div class="mesh-canvas-wrap">
+    <canvas id="meshCanvas"></canvas>
+  </div>
+
+  <div class="features">
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(37,99,235,.15)">🌐</div>
+      <h3>WebRTC Data Channels</h3>
+      <p>Direct browser-to-browser communication with encrypted data channels. No servers in the message path.</p>
+      <span class="tag blue">P2P · DTLS · SCTP</span>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(6,182,212,.15)">🔗</div>
+      <h3>Kademlia DHT</h3>
+      <p>Decentralized peer discovery using XOR-metric routing. Nodes self-organize without a central registry.</p>
+      <span class="tag cyan">k=20 · 160-bit IDs</span>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(16,185,129,.15)">🛡️</div>
+      <h3>Mesh Routing</h3>
+      <p>TTL-based flood routing with packet deduplication and store-and-forward delivery for offline nodes.</p>
+      <span class="tag green">TTL=5 · Dedupe · SAF</span>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(239,68,68,.15)">🚨</div>
+      <h3>SOS Broadcast</h3>
+      <p>Priority emergency broadcasts propagate through the full mesh with highest-priority routing guarantees.</p>
+      <span class="tag red">HIGH · Broadcast · E2E</span>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(245,158,11,.15)">🔒</div>
+      <h3>End-to-End Encryption</h3>
+      <p>Web Crypto API with ECDH key exchange and AES-GCM encryption. Keys never leave the device.</p>
+      <span class="tag blue">ECDH · AES-256-GCM</span>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(37,99,235,.15)">📦</div>
+      <h3>Offline Caching</h3>
+      <p>IndexedDB-backed message store enables offline-first operation and store-and-forward packet delivery.</p>
+      <span class="tag cyan">IndexedDB · Offline-first</span>
+    </div>
+  </div>
+
+  <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+    <div class="section-title">PACKET STRUCTURE</div>
+    <div class="enc-badge">🔐 E2E ENCRYPTED</div>
+  </div>
+  <div style="padding:0 24px 24px">
+    <div class="code-block">
+<span class="cm">// Example MeshLink packet</span><br>
+{<br>
+&nbsp;&nbsp;<span class="str">"id"</span>: <span class="str">"pkt-a3f9b2"</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// UUIDv4 for deduplication</span><br>
+&nbsp;&nbsp;<span class="str">"from"</span>: <span class="str">"peer-7c4d1a"</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// Sender peer ID</span><br>
+&nbsp;&nbsp;<span class="str">"to"</span>: <span class="str">"broadcast"</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// Target: peerID or "broadcast"</span><br>
+&nbsp;&nbsp;<span class="str">"ttl"</span>: <span class="num">5</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// Hops remaining (decrements)</span><br>
+&nbsp;&nbsp;<span class="str">"priority"</span>: <span class="str">"HIGH"</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// LOW | MEDIUM | HIGH | SOS</span><br>
+&nbsp;&nbsp;<span class="str">"message"</span>: <span class="str">"Need assistance at Grid B7"</span>,<br>
+&nbsp;&nbsp;<span class="str">"timestamp"</span>: <span class="num">1704067200000</span>,<br>
+&nbsp;&nbsp;<span class="str">"sig"</span>: <span class="str">"ECDSA:3045..."</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// Packet signature</span><br>
+&nbsp;&nbsp;<span class="str">"enc"</span>: <span class="str">"AES-GCM:iv+ciphertext"</span> <span class="cm">// Encrypted payload</span><br>
+}
+    </div>
+  </div>
+</div>
+
+<!-- COMMS VIEW -->
+<div id="view-comms" class="view">
+  <div style="padding:0 16px 0">
+    <div id="sosAlert" class="sos-alert" style="display:none;margin-top:12px">
+      <div class="sos-icon">🚨</div>
+      <div class="sos-text">
+        <strong>SOS BROADCAST ACTIVE</strong>
+        <span id="sosAlertText">Emergency signal propagating through mesh...</span>
+      </div>
+      <button class="viz-btn" style="font-size:11px" onclick="dismissSOS()">Dismiss</button>
+    </div>
+  </div>
+  <div class="comms-layout">
+    <div class="peers-panel">
+      <div class="panel-header">
+        Peers
+        <span id="peerCount" style="background:var(--slate);padding:2px 8px;border-radius:10px;font-size:10px;color:var(--blue3)">0</span>
+      </div>
+      <div style="padding:8px 12px;border-bottom:1px solid var(--border)">
+        <div class="identity-card" style="margin:0">
+          <div class="id-header">
+            <div class="id-avatar" id="myAvatarComms">ME</div>
+            <div>
+              <div class="id-name" id="myNameComms">Node Alpha</div>
+              <div class="id-label">This device</div>
+            </div>
+          </div>
+          <div class="id-field">
+            <label>Peer ID</label>
+            <span id="myPeerIdComms">—</span>
+          </div>
+          <div class="id-field">
+            <label>Public Key</label>
+            <span id="myPubKeyComms">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel-header" style="font-size:10px">BROADCAST</div>
+      <div style="padding:8px">
+        <div class="peer-item active" onclick="selectPeer('broadcast')">
+          <div class="peer-avatar" style="background:rgba(239,68,68,.2);color:#f87171">📡</div>
+          <div class="peer-info">
+            <div class="peer-name">Mesh Broadcast</div>
+            <div class="peer-meta">All connected peers</div>
+          </div>
+          <div class="peer-dot dot-green"></div>
+        </div>
+      </div>
+      <div class="panel-header" style="font-size:10px">DIRECT PEERS</div>
+      <div class="peer-list" id="peerList">
+        <div class="empty-state" style="height:100px;font-size:11px">No peers connected</div>
+      </div>
+      <div style="padding:8px 12px;border-top:1px solid var(--border)">
+        <button class="btn-outline" style="width:100%;font-size:12px;padding:8px" onclick="addMockPeer()">+ Simulate Peer Join</button>
+      </div>
+    </div>
+
+    <div class="chat-area">
+      <div class="chat-header">
+        <div>
+          <div class="chat-title" id="chatTitle">📡 Mesh Broadcast</div>
+          <div class="chat-subtitle" id="chatSubtitle">Broadcasting to all <span id="chatPeerCount">0</span> peers · TTL=5 · E2E Encrypted</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="enc-badge">🔐 AES-256-GCM</div>
+          <div class="ttl-badge">TTL <span id="headerTTL" style="color:var(--cyan2)">5</span></div>
+        </div>
+      </div>
+
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg incoming fade-in">
+          <div class="msg-header">
+            <span style="color:var(--cyan2)">SYSTEM</span>
+            <span>Node initialized</span>
+          </div>
+          <div class="msg-bubble" style="background:var(--navy3);border:1px solid var(--border)">
+            MeshLink node online. Peer discovery active via DHT. Waiting for connections...
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input-area">
+        <select class="priority-sel" id="prioritySel">
+          <option value="LOW">LOW</option>
+          <option value="MEDIUM" selected>MEDIUM</option>
+          <option value="HIGH">HIGH</option>
+        </select>
+        <div class="input-wrap">
+          <textarea class="chat-input" id="chatInput" placeholder="Type a message... (Enter to send)" rows="1"></textarea>
+        </div>
+        <button class="send-btn" onclick="sendMessage()">Send</button>
+        <button class="sos-btn" onclick="sendSOS()">🚨 SOS</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DHT VIEW -->
+<div id="view-dht" class="view">
+  <div class="dht-layout">
+    <div class="dht-main">
+      <div>
+        <div class="section-title">Kademlia Routing Table</div>
+        <div style="overflow-x:auto">
+          <table class="routing-table">
+            <thead>
+              <tr>
+                <th>Node ID (XOR prefix)</th>
+                <th>IP / Transport</th>
+                <th>Distance (XOR)</th>
+                <th>RTT</th>
+                <th>Bucket</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dhtTableBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">DHT Lookup Workflow</div>
+        <div class="code-block">
+<span class="cm">// Kademlia lookup: find k closest nodes to target</span><br>
+<span class="kw">async function</span> <span class="str">kademliaLookup</span>(targetId) {<br>
+&nbsp;&nbsp;<span class="cm">// Step 1: Find α closest nodes from local table</span><br>
+&nbsp;&nbsp;<span class="kw">const</span> closest = routingTable.findClosest(targetId, α=<span class="num">3</span>);<br>
+&nbsp;&nbsp;<span class="kw">const</span> queried = <span class="kw">new</span> Set();<br><br>
+&nbsp;&nbsp;<span class="cm">// Step 2: Iterative lookup — query closest unqueried</span><br>
+&nbsp;&nbsp;<span class="kw">while</span> (closest.some(n => !queried.has(n.id))) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> next = closest.filter(n => !queried.has(n.id)).slice(<span class="num">0</span>,α);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> results = <span class="kw">await</span> Promise.all(next.map(n => n.findNode(targetId)));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;next.forEach(n => queried.add(n.id));<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// XOR metric: distance = myId XOR targetId</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;results.flat().forEach(node => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> dist = xorDistance(node.id, targetId);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;routingTable.insert(node, dist);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;});<br>
+&nbsp;&nbsp;&nbsp;&nbsp;closest.sort((a,b) => xorCmp(a.id,b.id,targetId));<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="kw">return</span> closest.slice(<span class="num">0</span>,k=<span class="num">20</span>);<br>
+}
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Mesh Routing Algorithm</div>
+        <div class="code-block">
+<span class="cm">// TTL-based flood routing with deduplication</span><br>
+<span class="kw">function</span> routePacket(packet) {<br>
+&nbsp;&nbsp;<span class="cm">// 1. Deduplicate: reject already-seen packet IDs</span><br>
+&nbsp;&nbsp;<span class="kw">if</span> (seenPackets.has(packet.id)) <span class="kw">return</span>;<br>
+&nbsp;&nbsp;seenPackets.add(packet.id);<br><br>
+&nbsp;&nbsp;<span class="cm">// 2. Decrement TTL — drop if expired</span><br>
+&nbsp;&nbsp;packet.ttl -= <span class="num">1</span>;<br>
+&nbsp;&nbsp;<span class="kw">if</span> (packet.ttl &lt;= <span class="num">0</span>) <span class="kw">return</span>;<br><br>
+&nbsp;&nbsp;<span class="cm">// 3. Check if we're the destination</span><br>
+&nbsp;&nbsp;<span class="kw">if</span> (packet.to === myPeerId || packet.to === <span class="str">"broadcast"</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;deliver(packet);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (packet.to !== <span class="str">"broadcast"</span>) <span class="kw">return</span>;<br>
+&nbsp;&nbsp;}<br><br>
+&nbsp;&nbsp;<span class="cm">// 4. Rebroadcast to all known peers</span><br>
+&nbsp;&nbsp;peers.forEach(peer => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (peer.id !== packet.from) peer.send(packet);<br>
+&nbsp;&nbsp;});<br>
+}
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Store-and-Forward Cache</div>
+        <div id="safCache">
+          <div class="code-block" style="color:var(--text2)">No cached packets. Messages for offline peers will appear here.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dht-side">
+      <div class="section-title">Node Identity</div>
+      <div class="node-detail">
+        <div class="nd-row"><span>Peer ID</span><span id="dhtMyId">—</span></div>
+        <div class="nd-row"><span>Node Name</span><span id="dhtMyName">—</span></div>
+        <div class="nd-row"><span>Bucket count</span><span id="dhtBuckets">160</span></div>
+        <div class="nd-row"><span>k-factor</span><span style="color:var(--cyan2)">20</span></div>
+        <div class="nd-row"><span>α (alpha)</span><span style="color:var(--cyan2)">3</span></div>
+        <div class="nd-row"><span>Table size</span><span id="dhtTableSize">0 nodes</span></div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-title">XOR Distance Map</div>
+      <canvas id="xorCanvas" width="248" height="180" style="border-radius:8px;border:1px solid var(--border);display:block"></canvas>
+
+      <div class="divider"></div>
+      <div class="section-title">Activity Log</div>
+      <div class="scroll-pane" style="max-height:220px" id="dhtActivity">
+        <div class="activity-item">
+          <span class="act-time">00:00</span>
+          <div class="act-dot" style="background:var(--blue)"></div>
+          <span class="act-msg">DHT initialized</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VIZ VIEW -->
+<div id="view-viz" class="view">
+  <div class="viz-layout">
+    <div class="viz-toolbar">
+      <span style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-right:4px">View:</span>
+      <button class="viz-btn active" onclick="setVizMode('topology')">Topology</button>
+      <button class="viz-btn" onclick="setVizMode('packets')">Packet Flow</button>
+      <div style="flex:1"></div>
+      <button class="viz-btn" onclick="addMockPeer();renderViz()">+ Add Node</button>
+      <button class="viz-btn" onclick="simulatePacketFlow()">▶ Simulate Traffic</button>
+      <button class="viz-btn" onclick="resetNetwork()">↺ Reset</button>
+    </div>
+    <div class="viz-content">
+      <div class="viz-canvas-wrap" id="vizCanvasWrap">
+        <canvas id="vizCanvas"></canvas>
+      </div>
+      <div class="viz-stats">
+        <div class="section-title">Network Health</div>
+        <div class="stat-card">
+          <label>Active Nodes</label>
+          <div class="stat-val" id="statNodes">1</div>
+          <div class="stat-sub" id="statNodesSub">1 online · 0 offline</div>
+        </div>
+        <div class="stat-card">
+          <label>Connections</label>
+          <div class="stat-val" id="statConns">0</div>
+          <div class="stat-sub">WebRTC data channels</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="statConnBar" style="width:0%;background:var(--blue)"></div></div>
+        </div>
+        <div class="stat-card">
+          <label>Avg Latency</label>
+          <div class="stat-val" id="statLatency">—</div>
+          <div class="stat-sub">Round-trip time</div>
+        </div>
+        <div class="stat-card">
+          <label>Packets Routed</label>
+          <div class="stat-val" id="statPackets">0</div>
+          <div class="stat-sub">Since session start</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="statPktBar" style="width:0%;background:var(--cyan)"></div></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">Selected Node</div>
+        <div class="node-detail" id="selectedNodeDetail">
+          <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);text-align:center;padding:12px">Click a node to inspect</div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-title">Packet Log</div>
+        <div class="pkt-log">
+          <div class="pkt-log-header">
+            <span>ID</span><span>Route</span><span>PRI</span>
+          </div>
+          <div id="pktLogEntries" style="max-height:200px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ============================================================
+// MESHLINK CORE STATE
+// ============================================================
+const state = {
+  myPeerId: '',
+  myName: '',
+  myInitials: '',
+  peers: [],
+  messages: [],
+  packets: [],
+  seenPackets: new Set(),
+  dhtTable: [],
+  selectedPeer: 'broadcast',
+  vizMode: 'topology',
+  totalPackets: 0,
+  sosActive: false,
+  networkNodes: [],
+  networkEdges: [],
+  animPackets: [],
+  selectedNode: null,
+};
+
+// ============================================================
+// IDENTITY GENERATION
+// ============================================================
+const PEER_NAMES = ['Alpha','Bravo','Charlie','Delta','Echo','Foxtrot','Golf','Hotel','India','Juliet','Kilo','Lima'];
+const PEER_COLORS = ['#2563eb','#06b6d4','#10b981','#f59e0b','#8b5cf6','#ec4899','#ef4444','#14b8a6'];
+
+function generatePeerId() {
+  return 'peer-' + Math.random().toString(36).substr(2,6);
+}
+
+function generateNodeName() {
+  return PEER_NAMES[Math.floor(Math.random() * PEER_NAMES.length)] + '-' + Math.floor(Math.random()*100);
+}
+
+function generatePublicKey() {
+  let hex = '';
+  for(let i=0;i<16;i++) hex += Math.floor(Math.random()*256).toString(16).padStart(2,'0');
+  return hex.toUpperCase().match(/.{4}/g).join(':').substr(0,24) + '...';
+}
+
+function initIdentity() {
+  state.myPeerId = generatePeerId();
+  state.myName = 'Node-' + PEER_NAMES[0];
+  state.myInitials = state.myName.substr(0,2).toUpperCase();
+  state.networkNodes = [{
+    id: state.myPeerId,
+    name: state.myName,
+    color: '#2563eb',
+    x: 0, y: 0,
+    isMe: true,
+    online: true,
+    latency: 0,
+    connections: 0,
+    peerId: state.myPeerId
+  }];
+  updateIdentityUI();
+  initDHT();
+  renderViz();
+}
+
+function updateIdentityUI() {
+  const pid = state.myPeerId.toUpperCase();
+  document.getElementById('myAvatarComms').textContent = state.myInitials;
+  document.getElementById('myNameComms').textContent = state.myName;
+  document.getElementById('myPeerIdComms').textContent = state.myPeerId;
+  document.getElementById('myPubKeyComms').textContent = generatePublicKey();
+  document.getElementById('dhtMyId').textContent = state.myPeerId;
+  document.getElementById('dhtMyName').textContent = state.myName;
+  document.getElementById('navPeers').textContent = state.peers.length + ' peers';
+}
+
+// ============================================================
+// DHT — Kademlia-inspired routing table
+// ============================================================
+function xorDistance(a, b) {
+  // Simulate XOR distance from peer ID strings
+  let dist = 0;
+  for(let i=0;i<Math.min(a.length,b.length);i++) dist += Math.abs(a.charCodeAt(i)-b.charCodeAt(i));
+  return dist;
+}
+
+function initDHT() {
+  state.dhtTable = [];
+  logDHTActivity('DHT initialized with 160-bit key space', 'blue');
+  logDHTActivity('Bootstrap complete. Waiting for peers.', 'green');
+}
+
+function addToDHT(peer) {
+  const dist = xorDistance(state.myPeerId, peer.id);
+  const bucket = Math.floor(Math.log2(dist+1));
+  state.dhtTable.push({
+    nodeId: peer.id,
+    name: peer.name,
+    transport: 'WebRTC/' + peer.id.substr(-4).toUpperCase(),
+    distance: dist,
+    rtt: peer.latency + 'ms',
+    bucket: bucket,
+    status: 'active'
+  });
+  document.getElementById('dhtTableSize').textContent = state.dhtTable.length + ' nodes';
+  renderDHTTable();
+  logDHTActivity('Node ' + peer.id + ' added to bucket ' + bucket, 'cyan');
+}
+
+function renderDHTTable() {
+  const tbody = document.getElementById('dhtTableBody');
+  tbody.innerHTML = state.dhtTable.map(r => `
+    <tr>
+      <td>${r.nodeId.toUpperCase()}</td>
+      <td>${r.transport}</td>
+      <td>${r.distance}</td>
+      <td>${r.rtt}</td>
+      <td>B-${r.bucket}</td>
+      <td><span class="tag green" style="font-size:9px">active</span></td>
+    </tr>
+  `).join('');
+}
+
+function logDHTActivity(msg, color) {
+  const container = document.getElementById('dhtActivity');
+  const colors = {blue:'var(--blue)',cyan:'var(--cyan)',green:'var(--green)',amber:'var(--amber)',red:'var(--red)'};
+  const now = new Date();
+  const time = now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
+  const item = document.createElement('div');
+  item.className = 'activity-item fade-in';
+  item.innerHTML = `<span class="act-time">${time}</span><div class="act-dot" style="background:${colors[color]||'var(--blue)'}"></div><span class="act-msg">${msg}</span>`;
+  container.insertBefore(item, container.firstChild);
+  if(container.children.length > 20) container.lastChild.remove();
+}
+
+// XOR Canvas visualization
+function drawXorCanvas() {
+  const canvas = document.getElementById('xorCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W=248, H=180;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0d1426';
+  ctx.fillRect(0,0,W,H);
+
+  // Draw XOR distance visualization
+  const cx=W/2, cy=H/2, maxR=70;
+  // Draw concentric rings (k-buckets)
+  for(let i=1;i<=5;i++){
+    ctx.beginPath();
+    ctx.arc(cx,cy,maxR*(i/5),0,Math.PI*2);
+    ctx.strokeStyle = 'rgba(30,58,95,0.8)';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  // My node (center)
+  ctx.beginPath();
+  ctx.arc(cx,cy,6,0,Math.PI*2);
+  ctx.fillStyle = '#2563eb';
+  ctx.fill();
+  ctx.strokeStyle = '#60a5fa';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Peer nodes at XOR distances
+  state.peers.forEach((peer,i) => {
+    const angle = (i / Math.max(state.peers.length,1)) * Math.PI * 2;
+    const dist = xorDistance(state.myPeerId, peer.id);
+    const r = Math.min((dist / 200) * maxR + 20, maxR-4);
+    const px = cx + Math.cos(angle) * r;
+    const py = cy + Math.sin(angle) * r;
+
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(px,py);
+    ctx.strokeStyle = 'rgba(37,99,235,0.2)';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(px,py,4,0,Math.PI*2);
+    ctx.fillStyle = peer.color;
+    ctx.fill();
+  });
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '9px JetBrains Mono';
+  ctx.fillText('XOR space · ' + state.peers.length + ' peers', 8, H-8);
+}
+
+// ============================================================
+// PEER MANAGEMENT
+// ============================================================
+const PEER_AVATARS = ['🟢','🔵','🟣','🟡','🔴','🟠'];
+
+function addMockPeer() {
+  const nameIdx = state.peers.length % PEER_NAMES.length;
+  const peer = {
+    id: generatePeerId(),
+    name: PEER_NAMES[nameIdx+1] || PEER_NAMES[nameIdx],
+    color: PEER_COLORS[state.peers.length % PEER_COLORS.length],
+    initials: (PEER_NAMES[nameIdx+1]||PEER_NAMES[nameIdx]).substr(0,2).toUpperCase(),
+    latency: 20 + Math.floor(Math.random()*80),
+    online: true,
+    hops: Math.floor(Math.random()*3)+1,
+  };
+
+  state.peers.push(peer);
+  addToDHT(peer);
+
+  // Add to network topology
+  const angle = ((state.networkNodes.length-1) / Math.max(state.peers.length,1)) * Math.PI*2;
+  const r = 100 + Math.random()*60;
+  const node = {
+    id: peer.id, name: peer.name, color: peer.color,
+    x:0, y:0, isMe: false, online:true,
+    latency: peer.latency, connections:1, peerId: peer.id
+  };
+  state.networkNodes.push(node);
+
+  // Add edges
+  const connIdx = Math.floor(Math.random()*(state.networkNodes.length-1));
+  state.networkEdges.push({from: state.networkNodes[connIdx].id, to: peer.id, latency: peer.latency});
+
+  updatePeerList();
+  updateNavStats();
+  renderViz();
+
+  // Simulate peer joining message
+  addSystemMessage(peer.name + ' joined the mesh (' + peer.latency + 'ms RTT · ' + peer.hops + ' hops)');
+  logDHTActivity('Peer ' + peer.id + ' discovered via DHT', 'cyan');
+  drawXorCanvas();
+
+  return peer;
+}
+
+function updatePeerList() {
+  const list = document.getElementById('peerList');
+  document.getElementById('peerCount').textContent = state.peers.length;
+  document.getElementById('chatPeerCount').textContent = state.peers.length;
+
+  if(state.peers.length === 0) {
+    list.innerHTML = '<div class="empty-state" style="height:80px;font-size:11px">No peers connected</div>';
+    return;
+  }
+
+  list.innerHTML = state.peers.map(p => `
+    <div class="peer-item ${state.selectedPeer===p.id?'active':''}" onclick="selectPeer('${p.id}')">
+      <div class="peer-avatar" style="background:${p.color}22;color:${p.color}">${p.initials}</div>
+      <div class="peer-info">
+        <div class="peer-name">${p.name}</div>
+        <div class="peer-meta">${p.id} · ${p.latency}ms</div>
+      </div>
+      <div class="peer-dot ${p.online?'dot-green':'dot-slate'}"></div>
+    </div>
+  `).join('');
+}
+
+function selectPeer(peerId) {
+  state.selectedPeer = peerId;
+  if(peerId === 'broadcast') {
+    document.getElementById('chatTitle').textContent = '📡 Mesh Broadcast';
+    document.getElementById('chatSubtitle').innerHTML = 'Broadcasting to all <span id="chatPeerCount">'+state.peers.length+'</span> peers · TTL=5 · E2E Encrypted';
+  } else {
+    const peer = state.peers.find(p=>p.id===peerId);
+    if(peer) {
+      document.getElementById('chatTitle').textContent = peer.initials + ' ' + peer.name;
+      document.getElementById('chatSubtitle').textContent = peer.id + ' · ' + peer.latency + 'ms · Direct P2P';
+    }
+  }
+  updatePeerList();
+}
+
+// ============================================================
+// MESSAGING
+// ============================================================
+function generatePacketId() {
+  return 'pkt-' + Math.random().toString(36).substr(2,6);
+}
+
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+
+  const priority = document.getElementById('prioritySel').value;
+  const packet = {
+    id: generatePacketId(),
+    from: state.myPeerId,
+    to: state.selectedPeer,
+    ttl: 5,
+    priority: priority,
+    message: text,
+    timestamp: Date.now(),
+  };
+
+  addMessage({...packet, isMe: true});
+  simulatePacketRoute(packet);
+  input.value = '';
+  input.style.height = '42px';
+}
+
+function sendSOS() {
+  const packet = {
+    id: generatePacketId(),
+    from: state.myPeerId,
+    to: 'broadcast',
+    ttl: 5,
+    priority: 'SOS',
+    message: '🚨 SOS — Emergency assistance required at this node',
+    timestamp: Date.now(),
+  };
+  addMessage({...packet, isMe: true});
+  simulatePacketRoute(packet);
+
+  // Show SOS alert
+  state.sosActive = true;
+  const alert = document.getElementById('sosAlert');
+  alert.style.display = 'flex';
+  document.getElementById('sosAlertText').textContent =
+    'Emergency broadcast propagating... TTL=5 · ' + state.peers.length + ' peers notified';
+
+  addSystemMessage('⚠ SOS broadcast initiated — propagating through full mesh');
+  logDHTActivity('SOS packet routed with priority override', 'red');
+}
+
+function dismissSOS() {
+  document.getElementById('sosAlert').style.display = 'none';
+  state.sosActive = false;
+}
+
+function addMessage(packet) {
+  state.messages.push(packet);
+  state.totalPackets++;
+
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (packet.isMe ? 'outgoing' : 'incoming') + ' fade-in';
+
+  const priColors = {LOW:'var(--text3)',MEDIUM:'var(--blue3)',HIGH:'#fbbf24',SOS:'#f87171'};
+  const priColor = priColors[packet.priority] || 'var(--text3)';
+  const toLabel = packet.to==='broadcast' ? '→ Broadcast' : '→ ' + packet.to;
+
+  div.innerHTML = `
+    <div class="msg-header">
+      <span style="color:${priColor}">${packet.priority}</span>
+      <span>${packet.isMe ? 'You' : packet.from}</span>
+      <span>${toLabel}</span>
+      <span>TTL:${packet.ttl}</span>
+    </div>
+    <div class="msg-bubble ${packet.priority==='SOS'?'sos':''}">${packet.message}</div>
+    <div class="msg-packet">
+      <code>${packet.id}</code> · from:<code>${packet.from.substr(0,10)}</code> · enc:<code>AES-GCM✓</code>
+    </div>
+  `;
+
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  addPacketLog(packet);
+  updateNavStats();
+}
+
+function addSystemMessage(text) {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg incoming fade-in';
+  div.innerHTML = `
+    <div class="msg-header"><span style="color:var(--text3)">SYSTEM</span></div>
+    <div class="msg-bubble" style="background:var(--navy3);border:1px solid var(--border);color:var(--text2)">${text}</div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function simulatePacketRoute(packet) {
+  // Simulate incoming replies for non-SOS messages
+  if(packet.priority !== 'SOS' && state.peers.length > 0 && Math.random() > 0.3) {
+    setTimeout(() => {
+      const peer = state.peers[Math.floor(Math.random()*state.peers.length)];
+      const replies = [
+        'Message received. All clear on this end.',
+        'Copy that. Standing by.',
+        'Acknowledged. Network stable.',
+        'Got it. Relaying to downstream peers.',
+        'Confirmed. TTL decremented to ' + (packet.ttl-1),
+      ];
+      const reply = {
+        id: generatePacketId(),
+        from: peer.id,
+        to: state.myPeerId,
+        ttl: 4,
+        priority: 'LOW',
+        message: replies[Math.floor(Math.random()*replies.length)],
+        timestamp: Date.now(),
+        isMe: false,
+      };
+      addMessage(reply);
+    }, 800 + Math.random()*1200);
+  }
+  drawXorCanvas();
+}
+
+function addPacketLog(packet) {
+  const container = document.getElementById('pktLogEntries');
+  const priClass = {SOS:'pri-sos',HIGH:'pri-high',MEDIUM:'pri-med',LOW:'pri-low'}[packet.priority]||'pri-low';
+  const entry = document.createElement('div');
+  entry.className = 'pkt-entry fade-in';
+  const route = (packet.from.substr(0,8)) + '→' + (packet.to.substr(0,8));
+  entry.innerHTML = `
+    <span class="pkt-time">${new Date().getSeconds()}s</span>
+    <span class="pkt-id">${packet.id}</span>
+    <span class="pkt-route">${route}</span>
+    <span class="pkt-pri ${priClass}">${packet.priority}</span>
+  `;
+  container.insertBefore(entry, container.firstChild);
+  if(container.children.length > 20) container.lastChild.remove();
+
+  // Update stats
+  document.getElementById('statPackets').textContent = state.totalPackets;
+  document.getElementById('statPktBar').style.width = Math.min(state.totalPackets*5, 100)+'%';
+}
+
+// ============================================================
+// NETWORK VISUALIZATION
+// ============================================================
+let vizAnimFrame = null;
+let vizMode = 'topology';
+
+function setVizMode(mode) {
+  vizMode = mode;
+  document.querySelectorAll('.viz-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderViz();
+}
+
+function layoutNodes() {
+  const wrap = document.getElementById('vizCanvasWrap');
+  const W = wrap.offsetWidth || 600;
+  const H = wrap.offsetHeight || 400;
+  const cx = W/2, cy = H/2;
+  const n = state.networkNodes.length;
+
+  state.networkNodes.forEach((node, i) => {
+    if(node.isMe) { node.x = cx; node.y = cy; }
+    else {
+      const angle = ((i-1) / (n-1)) * Math.PI * 2;
+      const r = Math.min(W,H) * 0.32;
+      node.x = cx + Math.cos(angle) * r;
+      node.y = cy + Math.sin(angle) * r;
+    }
+  });
+}
+
+function renderViz() {
+  const canvas = document.getElementById('vizCanvas');
+  if(!canvas) return;
+  const wrap = document.getElementById('vizCanvasWrap');
+  const W = wrap.offsetWidth || 600;
+  const H = wrap.offsetHeight || 400;
+  canvas.width = W; canvas.height = H;
+  layoutNodes();
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  // Background grid
+  ctx.strokeStyle = 'rgba(30,42,78,0.3)';
+  ctx.lineWidth = 0.5;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Edges
+  state.networkEdges.forEach(edge => {
+    const from = state.networkNodes.find(n=>n.id===edge.from);
+    const to = state.networkNodes.find(n=>n.id===edge.to);
+    if(!from||!to) return;
+    ctx.beginPath();
+    ctx.moveTo(from.x,from.y);
+    ctx.lineTo(to.x,to.y);
+    ctx.strokeStyle = 'rgba(37,99,235,0.25)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Latency label
+    const mx=(from.x+to.x)/2, my=(from.y+to.y)/2;
+    ctx.fillStyle = 'rgba(100,116,139,0.8)';
+    ctx.font = '9px JetBrains Mono';
+    ctx.fillText(edge.latency+'ms', mx+4, my-4);
+  });
+
+  // Nodes
+  state.networkNodes.forEach(node => {
+    const r = node.isMe ? 14 : 10;
+    const selected = state.selectedNode && state.selectedNode.id===node.id;
+
+    if(selected){
+      ctx.beginPath();
+      ctx.arc(node.x,node.y,r+8,0,Math.PI*2);
+      ctx.fillStyle = node.color+'22';
+      ctx.fill();
+    }
+
+    // Glow for online nodes
+    if(node.online){
+      ctx.beginPath();
+      ctx.arc(node.x,node.y,r+4,0,Math.PI*2);
+      ctx.fillStyle = node.color+'22';
+      ctx.fill();
+    }
+
+    ctx.beginPath();
+    ctx.arc(node.x,node.y,r,0,Math.PI*2);
+    ctx.fillStyle = node.isMe ? '#1e3a70' : '#0d1a30';
+    ctx.fill();
+    ctx.strokeStyle = node.online ? node.color : '#64748b';
+    ctx.lineWidth = node.isMe ? 2 : 1.5;
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = node.online ? '#f0f4ff' : '#64748b';
+    ctx.font = (node.isMe ? 'bold ' : '') + '10px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText(node.isMe ? 'ME' : node.name.substr(0,4), node.x, node.y+3.5);
+
+    // Status dot
+    ctx.beginPath();
+    ctx.arc(node.x+r-2,node.y-r+2,3,0,Math.PI*2);
+    ctx.fillStyle = node.online ? '#10b981' : '#64748b';
+    ctx.fill();
+  });
+
+  // Animate packets
+  state.animPackets = state.animPackets.filter(ap => {
+    const progress = (Date.now()-ap.startTime)/ap.duration;
+    if(progress>=1) return false;
+    const from = state.networkNodes.find(n=>n.id===ap.from);
+    const to = state.networkNodes.find(n=>n.id===ap.to);
+    if(!from||!to) return false;
+    const x = from.x+(to.x-from.x)*progress;
+    const y = from.y+(to.y-from.y)*progress;
+    ctx.beginPath();
+    ctx.arc(x,y,5,0,Math.PI*2);
+    ctx.fillStyle = ap.color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    return true;
+  });
+
+  ctx.textAlign = 'start';
+
+  // Update stats UI
+  const online = state.networkNodes.filter(n=>n.online).length;
+  document.getElementById('statNodes').textContent = state.networkNodes.length;
+  document.getElementById('statNodesSub').textContent = online + ' online · ' + (state.networkNodes.length-online) + ' offline';
+  document.getElementById('statConns').textContent = state.networkEdges.length;
+  document.getElementById('statConnBar').style.width = Math.min(state.networkEdges.length*10,100)+'%';
+  const avgLat = state.networkEdges.length ? Math.round(state.networkEdges.reduce((a,e)=>a+e.latency,0)/state.networkEdges.length) : 0;
+  document.getElementById('statLatency').textContent = avgLat ? avgLat+'ms' : '—';
+  document.getElementById('navLatency').textContent = avgLat ? avgLat+'ms' : '—ms';
+
+  if(state.animPackets.length>0) requestAnimationFrame(renderViz);
+}
+
+function simulatePacketFlow() {
+  if(state.networkNodes.length < 2) {
+    addMockPeer(); addMockPeer();
+  }
+  const colors = ['#2563eb','#ef4444','#10b981','#f59e0b','#06b6d4'];
+  let delay = 0;
+  state.networkEdges.forEach(edge => {
+    setTimeout(() => {
+      const color = colors[Math.floor(Math.random()*colors.length)];
+      state.animPackets.push({from:edge.from,to:edge.to,color,startTime:Date.now(),duration:800+Math.random()*400});
+      const priorities = ['LOW','MEDIUM','HIGH'];
+      const pktId = generatePacketId();
+      const from = state.networkNodes.find(n=>n.id===edge.from);
+      const to = state.networkNodes.find(n=>n.id===edge.to);
+      if(from&&to){
+        state.totalPackets++;
+        addPacketLog({id:pktId,from:edge.from,to:edge.to,priority:priorities[Math.floor(Math.random()*3)],ttl:Math.ceil(Math.random()*5)});
+      }
+      renderViz();
+    }, delay);
+    delay += 200 + Math.random()*300;
+  });
+}
+
+function resetNetwork() {
+  state.peers = [];
+  state.networkEdges = [];
+  state.networkNodes = [{...state.networkNodes[0]}];
+  state.messages = [];
+  state.dhtTable = [];
+  state.totalPackets = 0;
+  state.animPackets = [];
+  updatePeerList();
+  renderViz();
+  renderDHTTable();
+  document.getElementById('chatMessages').innerHTML = `
+    <div class="msg incoming fade-in">
+      <div class="msg-header"><span style="color:var(--cyan2)">SYSTEM</span><span>Network reset</span></div>
+      <div class="msg-bubble" style="background:var(--navy3);border:1px solid var(--border)">Network cleared. All peer connections terminated.</div>
+    </div>`;
+  document.getElementById('dhtActivity').innerHTML = `
+    <div class="activity-item"><span class="act-time">--:--</span><div class="act-dot" style="background:var(--blue)"></div><span class="act-msg">DHT reset</span></div>`;
+  updateNavStats();
+}
+
+function updateNavStats() {
+  document.getElementById('navPeers').textContent = state.peers.length + ' peers';
+  document.getElementById('peerCount').textContent = state.peers.length;
+  document.getElementById('chatPeerCount').textContent = state.peers.length;
+}
+
+// Viz canvas click — select node
+document.addEventListener('click', e => {
+  const canvas = document.getElementById('vizCanvas');
+  if(!canvas || e.target !== canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  let hit = null;
+  state.networkNodes.forEach(node => {
+    const d = Math.hypot(node.x-mx, node.y-my);
+    if(d < 18) hit = node;
+  });
+  state.selectedNode = hit;
+  if(hit) {
+    const detail = document.getElementById('selectedNodeDetail');
+    const hops = state.networkEdges.filter(e=>e.from===hit.id||e.to===hit.id).length;
+    detail.innerHTML = `
+      <div class="nd-row"><span>Name</span><span>${hit.name}</span></div>
+      <div class="nd-row"><span>Peer ID</span><span style="color:var(--cyan2)">${hit.id}</span></div>
+      <div class="nd-row"><span>Status</span><span style="color:${hit.online?'var(--green)':'var(--text3)'}">${hit.online?'ONLINE':'OFFLINE'}</span></div>
+      <div class="nd-row"><span>Latency</span><span>${hit.latency||0}ms RTT</span></div>
+      <div class="nd-row"><span>Connections</span><span>${hops}</span></div>
+      <div class="nd-row"><span>Type</span><span>${hit.isMe?'LOCAL NODE':'REMOTE PEER'}</span></div>
+    `;
+  }
+  renderViz();
+});
+
+// ============================================================
+// LANDING MESH CANVAS ANIMATION
+// ============================================================
+function initMeshCanvas() {
+  const canvas = document.getElementById('meshCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes;
+
+  function resize() {
+    W = canvas.offsetWidth; H = canvas.offsetHeight;
+    canvas.width = W; canvas.height = H;
+    nodes = [];
+    const count = Math.floor(W/80);
+    for(let i=0;i<count;i++) {
+      nodes.push({
+        x: Math.random()*W, y: Math.random()*H,
+        vx: (Math.random()-.5)*0.4, vy: (Math.random()-.5)*0.4,
+        r: 2+Math.random()*2,
+        color: PEER_COLORS[i%PEER_COLORS.length]
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    nodes.forEach(n => {
+      n.x += n.vx; n.y += n.vy;
+      if(n.x<0||n.x>W) n.vx*=-1;
+      if(n.y<0||n.y>H) n.vy*=-1;
+    });
+    nodes.forEach((a,i) => {
+      nodes.forEach((b,j) => {
+        if(j<=i) return;
+        const d = Math.hypot(a.x-b.x,a.y-b.y);
+        if(d<120){
+          ctx.beginPath();
+          ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+          ctx.strokeStyle = `rgba(37,99,235,${0.15*(1-d/120)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      });
+    });
+    nodes.forEach(n => {
+      ctx.beginPath();
+      ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+      ctx.fillStyle = n.color+'99';
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  draw();
+}
+
+// ============================================================
+// VIEW ROUTING
+// ============================================================
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  const labels = {landing:'Overview',comms:'Comms',dht:'DHT',viz:'Network'};
+  document.querySelectorAll('.nav-btn').forEach(b=>{if(b.textContent===labels[id])b.classList.add('active')});
+
+  if(id==='viz') { setTimeout(()=>{renderViz();},50); }
+  if(id==='dht') { drawXorCanvas(); }
+}
+
+// Chat input auto-resize + enter send
+document.getElementById('chatInput').addEventListener('keydown', e => {
+  if(e.key==='Enter' && !e.shiftKey){e.preventDefault();sendMessage();}
+});
+document.getElementById('chatInput').addEventListener('input', function(){
+  this.style.height='42px';
+  this.style.height=Math.min(this.scrollHeight,100)+'px';
+});
+
+// ============================================================
+// BOOTSTRAP
+// ============================================================
+initIdentity();
+initMeshCanvas();
+
+// Auto-add a couple demo peers after a short delay
+setTimeout(()=>{addMockPeer();}, 800);
+setTimeout(()=>{addMockPeer();}, 1600);
+setTimeout(()=>{
+  if(state.peers.length>0){
+    const peer = state.peers[0];
+    const welcomes=[
+      'MeshLink node online. Ready for emergency comms.',
+      'All systems nominal. Mesh routing active.',
+      'Peer discovery complete. Encryption handshake done.',
+    ];
+    const msg={id:generatePacketId(),from:peer.id,to:state.myPeerId,ttl:4,priority:'LOW',
+      message:welcomes[0],timestamp:Date.now(),isMe:false};
+    addMessage(msg);
+  }
+}, 2400);
+
+// Auto-start viz animation loop
+setInterval(()=>{
+  if(document.getElementById('view-viz').classList.contains('active')){
+    renderViz();
+  }
+}, 2000);
+
+// Periodically update DHT XOR canvas
+setInterval(drawXorCanvas, 3000);
+</script>
+</body>
+</html>
