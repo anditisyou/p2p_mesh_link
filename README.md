@@ -1,6 +1,6 @@
-# MeshLink — Prototype
+# AetherNet — Prototype
 
-MeshLink is a prototype decentralized emergency communication system designed to simulate peer-to-peer mesh networking without relying on centralized internet infrastructure.
+AetherNet is a prototype decentralized emergency communication system designed to simulate peer-to-peer mesh networking without relying on centralized internet infrastructure.
 
 The project demonstrates how devices can communicate directly using mesh networking concepts, distributed peer discovery, and packet routing mechanisms during infrastructure failures or emergency scenarios.
 
